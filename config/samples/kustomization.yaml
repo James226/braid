@@ -1,0 +1,6 @@
+## Append samples of your project ##
+resources:
+- v1_application.yaml
+- v1_objecttemplate.yaml
+- v1_applicationtemplate.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples

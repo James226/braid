@@ -1,0 +1,13 @@
+apiVersion: braid.james-parker.dev/v1
+kind: Application
+metadata:
+  labels:
+    app.kubernetes.io/name: braid
+    app.kubernetes.io/managed-by: kustomize
+  name: application-sample
+spec:
+  template: applicationtemplate-sample
+  variables:
+    tag: 1.14.2
+    foo: barbar
+  # TODO(user): Add fields here

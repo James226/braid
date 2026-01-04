@@ -1,0 +1,31 @@
+apiVersion: braid.james-parker.dev/v1
+kind: ObjectTemplate
+metadata:
+  labels:
+    app.kubernetes.io/name: braid
+    app.kubernetes.io/managed-by: kustomize
+  name: objecttemplate-sample
+spec:
+  apiVersion: apps/v1
+  kind: Deployment
+  variables:
+    - image
+    - tag
+  spec: |
+    replicas: 3
+    selector:
+      matchLabels:
+        app: nginx
+    template:
+      metadata:
+        labels:
+          app: nginx
+      spec:
+        containers:
+          - name: nginx
+            image: "{{.image}}:{{.tag}}"
+            env:
+              - name: foo
+                value: bar
+            ports:
+              - containerPort: 80
