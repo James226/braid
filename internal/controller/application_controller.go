@@ -22,6 +22,7 @@ import (
 	"text/template"
 
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -118,6 +119,12 @@ func (r *ApplicationReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 			object.SetNamespace(application.Namespace)
 			object.SetLabels(make(map[string]string))
 			object.SetAnnotations(make(map[string]string))
+			object.SetOwnerReferences([]metav1.OwnerReference{{
+				APIVersion: application.APIVersion,
+				Kind:       application.Kind,
+				Name:       application.Name,
+				UID:        application.UID,
+			}})
 
 			object.Object["spec"] = spec
 
