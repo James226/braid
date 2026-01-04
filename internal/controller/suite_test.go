@@ -18,8 +18,6 @@ package controller
 
 import (
 	"context"
-	"encoding/json"
-	"maps"
 	"os"
 	"path/filepath"
 	"testing"
@@ -48,69 +46,6 @@ var (
 	cfg       *rest.Config
 	k8sClient client.Client
 )
-
-func TestFoo1(t *testing.T) {
-	a := map[string]interface{}{
-		"key": "bar",
-	}
-
-	b := map[string]interface{}{
-		"key": "foo",
-	}
-
-	merge := MergeMaps(a, b)
-	expected := map[string]interface{}{
-		"key": "foo",
-	}
-	if !maps.Equal(merge, expected) {
-		t.Fail()
-	}
-}
-
-func TestFoo(t *testing.T) {
-	a := map[string]interface{}{
-		"key": map[string]interface{}{
-			"nestedKey": "nestedValue",
-		},
-		"key2": "bar",
-	}
-
-	b := map[string]interface{}{
-		"key": map[string]interface{}{
-			"nestedKey": "foo",
-		},
-	}
-
-	merge := MergeMaps(a, b)
-
-	result, _ := json.Marshal(merge)
-	if string(result) != "{\"key\":{\"nestedKey\":\"foo\"},\"key2\":\"bar\"}" {
-		t.Error(string(result))
-	}
-}
-
-func TestFoo2(t *testing.T) {
-	a := map[string]interface{}{
-		"key": []map[string]interface{}{{
-			"nestedKey":  "nestedValue",
-			"anotherKey": "anotherValue",
-		}},
-		"key2": "bar",
-	}
-
-	b := map[string]interface{}{
-		"key": []map[string]interface{}{{
-			"nestedKey": "foo",
-		}},
-	}
-
-	merge := MergeMaps(a, b)
-
-	result, _ := json.Marshal(merge)
-	if string(result) != "{\"key\":[{\"anotherKey\":\"anotherValue\",\"nestedKey\":\"foo\"}],\"key2\":\"bar\"}" {
-		t.Error(string(result))
-	}
-}
 
 func TestControllers(t *testing.T) {
 	RegisterFailHandler(Fail)

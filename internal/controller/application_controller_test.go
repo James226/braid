@@ -27,7 +27,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	braidjamesparkerdevv1 "github.com/james226/braid/api/v1"
+	braidv1 "github.com/james226/braid/api/v1"
 )
 
 var _ = Describe("Application Controller", func() {
@@ -40,18 +40,18 @@ var _ = Describe("Application Controller", func() {
 			Name:      resourceName,
 			Namespace: "default", // TODO(user):Modify as needed
 		}
-		application := &braidjamesparkerdevv1.Application{}
+		application := &braidv1.Application{}
 
 		BeforeEach(func() {
 			By("creating the custom resource for the Kind Application")
 			err := k8sClient.Get(ctx, typeNamespacedName, application)
 			if err != nil && errors.IsNotFound(err) {
-				resource := &braidjamesparkerdevv1.Application{
+				resource := &braidv1.Application{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      resourceName,
 						Namespace: "default",
 					},
-					Spec: braidjamesparkerdevv1.ApplicationSpec{
+					Spec: braidv1.ApplicationSpec{
 						Template: resourceName,
 					},
 					// TODO(user): Specify other spec details if needed.
@@ -62,7 +62,7 @@ var _ = Describe("Application Controller", func() {
 
 		AfterEach(func() {
 			// TODO(user): Cleanup logic after each test, like removing the resource instance.
-			resource := &braidjamesparkerdevv1.Application{}
+			resource := &braidv1.Application{}
 			err := k8sClient.Get(ctx, typeNamespacedName, resource)
 			Expect(err).NotTo(HaveOccurred())
 
