@@ -46,6 +46,18 @@ var _ = Describe("Application Controller", func() {
 			By("creating the custom resource for the Kind Application")
 			err := k8sClient.Get(ctx, typeNamespacedName, application)
 			if err != nil && errors.IsNotFound(err) {
+				appTemplate := &braidv1.ApplicationTemplate{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      resourceName,
+						Namespace: "default",
+					},
+					Spec: braidv1.ApplicationTemplateSpec{
+						Objects: []braidv1.ApplicationObject{},
+					},
+					// TODO(user): Specify other spec details if needed.
+				}
+				Expect(k8sClient.Create(ctx, appTemplate)).To(Succeed())
+
 				resource := &braidv1.Application{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      resourceName,

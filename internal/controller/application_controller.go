@@ -63,96 +63,99 @@ func (r *ApplicationReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	var template v1.ApplicationTemplate
+	var tmpl v1.ApplicationTemplate
 	err = r.Get(ctx, types.NamespacedName{
 		Namespace: application.Namespace,
 		Name:      application.Spec.Template,
-	}, &template)
+	}, &tmpl)
 
 	if err != nil {
 		l.Error(err, "unable to fetch Application Template")
 		return ctrl.Result{}, err
 	}
 
-	var deployments v1.ObjectTemplate
-	err = r.Get(ctx, types.NamespacedName{
-		Namespace: application.Namespace,
-		Name:      template.Spec.Objects[0].Template,
-	}, &deployments)
+	for _, o := range tmpl.Spec.Objects {
 
-	if err != nil {
-		l.Error(err, "unable to fetch Deployment Template")
-		return ctrl.Result{}, err
-	}
+		var deployments v1.ObjectTemplate
+		err = r.Get(ctx, types.NamespacedName{
+			Namespace: application.Namespace,
+			Name:      o.Template,
+		}, &deployments)
 
-	variables := make(map[string]string)
-
-	for k, v := range template.Spec.Objects[0].Variables {
-		variables[k] = v
-	}
-
-	for k, v := range application.Spec.Variables {
-		variables[k] = v
-	}
-
-	spec, err := replaceVariables(deployments.Spec.Spec, variables)
-	if err != nil {
-		l.Error(err, "unable to create Deployment spec")
-		return ctrl.Result{}, client.IgnoreNotFound(err)
-	}
-
-	object := unstructured.Unstructured{}
-	groupVersion, err := schema.ParseGroupVersion(deployments.Spec.ApiVersion)
-	if err != nil {
-		l.Error(err, "unable to parse GroupVersion")
-		return ctrl.Result{}, client.IgnoreNotFound(err)
-	}
-	object.SetGroupVersionKind(groupVersion.WithKind(deployments.Spec.Kind))
-
-	name := types.NamespacedName{Namespace: application.Namespace, Name: application.Name}
-	err = r.Get(ctx, name, &object)
-
-	if err != nil {
-		if errors.IsNotFound(err) {
-
-			object.SetName(application.Name)
-			object.SetNamespace(application.Namespace)
-			object.SetLabels(make(map[string]string))
-			object.SetAnnotations(make(map[string]string))
-			object.SetOwnerReferences([]metav1.OwnerReference{{
-				APIVersion: application.APIVersion,
-				Kind:       application.Kind,
-				Name:       application.Name,
-				UID:        application.UID,
-			}})
-
-			object.Object["spec"] = spec
-
-			err = r.Apply(ctx, client.ApplyConfigurationFromUnstructured(&object), &client.ApplyOptions{FieldManager: "braid"})
-
-			if err != nil {
-				l.Error(err, "unable to create Deployment")
-				return ctrl.Result{}, err
-			}
-			return ctrl.Result{}, nil
+		if err != nil {
+			l.Error(err, "unable to fetch Deployment Template")
+			return ctrl.Result{}, err
 		}
-		return ctrl.Result{}, err
-	}
 
-	object = unstructured.Unstructured{}
-	object.SetGroupVersionKind(groupVersion.WithKind(deployments.Spec.Kind))
-	object.SetName(application.Name)
-	object.SetNamespace(application.Namespace)
-	object.SetLabels(make(map[string]string))
-	object.SetAnnotations(make(map[string]string))
+		variables := make(map[string]string)
 
-	object.Object["spec"] = spec
+		for k, v := range o.Variables {
+			variables[k] = v
+		}
 
-	err = r.Apply(ctx, client.ApplyConfigurationFromUnstructured(&object), &client.ApplyOptions{FieldManager: "braid"})
+		for k, v := range application.Spec.Variables {
+			variables[k] = v
+		}
 
-	if err != nil {
-		l.Error(err, "unable to update Deployment")
-		return ctrl.Result{}, err
+		spec, err := replaceVariables(deployments.Spec.Spec, variables)
+		if err != nil {
+			l.Error(err, "unable to create Deployment spec")
+			return ctrl.Result{}, client.IgnoreNotFound(err)
+		}
+
+		object := unstructured.Unstructured{}
+		groupVersion, err := schema.ParseGroupVersion(deployments.Spec.ApiVersion)
+		if err != nil {
+			l.Error(err, "unable to parse GroupVersion")
+			return ctrl.Result{}, client.IgnoreNotFound(err)
+		}
+		object.SetGroupVersionKind(groupVersion.WithKind(deployments.Spec.Kind))
+
+		name := types.NamespacedName{Namespace: application.Namespace, Name: application.Name}
+		err = r.Get(ctx, name, &object)
+
+		if err != nil {
+			if errors.IsNotFound(err) {
+
+				object.SetName(application.Name)
+				object.SetNamespace(application.Namespace)
+				object.SetLabels(make(map[string]string))
+				object.SetAnnotations(make(map[string]string))
+				object.SetOwnerReferences([]metav1.OwnerReference{{
+					APIVersion: application.APIVersion,
+					Kind:       application.Kind,
+					Name:       application.Name,
+					UID:        application.UID,
+				}})
+
+				object.Object["spec"] = spec
+
+				err = r.Apply(ctx, client.ApplyConfigurationFromUnstructured(&object), &client.ApplyOptions{FieldManager: "braid"})
+
+				if err != nil {
+					l.Error(err, "unable to create Deployment")
+					return ctrl.Result{}, err
+				}
+				return ctrl.Result{}, nil
+			}
+			return ctrl.Result{}, err
+		}
+
+		object = unstructured.Unstructured{}
+		object.SetGroupVersionKind(groupVersion.WithKind(deployments.Spec.Kind))
+		object.SetName(application.Name)
+		object.SetNamespace(application.Namespace)
+		object.SetLabels(make(map[string]string))
+		object.SetAnnotations(make(map[string]string))
+
+		object.Object["spec"] = spec
+
+		err = r.Apply(ctx, client.ApplyConfigurationFromUnstructured(&object), &client.ApplyOptions{FieldManager: "braid"})
+
+		if err != nil {
+			l.Error(err, "unable to update Deployment")
+			return ctrl.Result{}, err
+		}
 	}
 
 	return ctrl.Result{}, nil
