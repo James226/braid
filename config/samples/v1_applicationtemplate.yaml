@@ -10,3 +10,4 @@ spec:
     - template: objecttemplate-sample
       variables:
         image: nginx
+        test: foo1

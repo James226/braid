@@ -21,6 +21,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -31,14 +32,14 @@ import (
 )
 
 var _ = Describe("Application Controller", func() {
-	Context("When reconciling a resource", func() {
+	Context("When reconciling an application with no objects", func() {
 		const resourceName = "test-resource"
 
 		ctx := context.Background()
 
 		typeNamespacedName := types.NamespacedName{
 			Name:      resourceName,
-			Namespace: "default", // TODO(user):Modify as needed
+			Namespace: "default",
 		}
 		application := &braidv1.Application{}
 
@@ -54,7 +55,6 @@ var _ = Describe("Application Controller", func() {
 					Spec: braidv1.ApplicationTemplateSpec{
 						Objects: []braidv1.ApplicationObject{},
 					},
-					// TODO(user): Specify other spec details if needed.
 				}
 				Expect(k8sClient.Create(ctx, appTemplate)).To(Succeed())
 
@@ -66,20 +66,25 @@ var _ = Describe("Application Controller", func() {
 					Spec: braidv1.ApplicationSpec{
 						Template: resourceName,
 					},
-					// TODO(user): Specify other spec details if needed.
 				}
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
 			}
 		})
 
 		AfterEach(func() {
-			// TODO(user): Cleanup logic after each test, like removing the resource instance.
 			resource := &braidv1.Application{}
 			err := k8sClient.Get(ctx, typeNamespacedName, resource)
 			Expect(err).NotTo(HaveOccurred())
 
 			By("Cleanup the specific resource instance Application")
 			Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
+
+			template := &braidv1.ApplicationTemplate{}
+			err = k8sClient.Get(ctx, typeNamespacedName, template)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Cleanup the specific resource instance Application")
+			Expect(k8sClient.Delete(ctx, template)).To(Succeed())
 		})
 		It("should successfully reconcile the resource", func() {
 			By("Reconciling the created resource")
@@ -92,8 +97,111 @@ var _ = Describe("Application Controller", func() {
 				NamespacedName: typeNamespacedName,
 			})
 			Expect(err).NotTo(HaveOccurred())
-			// TODO(user): Add more specific assertions depending on your controller's reconciliation logic.
-			// Example: If you expect a certain status condition after reconciliation, verify it here.
+		})
+	})
+
+	Context("When reconciling an application with objects", func() {
+		const resourceName = "test-resource"
+
+		ctx := context.Background()
+
+		typeNamespacedName := types.NamespacedName{
+			Name:      resourceName,
+			Namespace: "default",
+		}
+		application := &braidv1.Application{}
+
+		BeforeEach(func() {
+			By("creating the custom resource for the Kind Application")
+			err := k8sClient.Get(ctx, typeNamespacedName, application)
+			if err != nil && errors.IsNotFound(err) {
+				object := &braidv1.ObjectTemplate{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      resourceName,
+						Namespace: "default",
+					},
+					Spec: braidv1.ObjectTemplateSpec{
+						ApiVersion: "v1",
+						Kind:       "Pod",
+						Spec: `
+                            containers:
+                            - name: nginx
+                              image: "nginx"
+                              env:
+                              - name: foo
+                                value: bar`,
+					},
+				}
+				Expect(k8sClient.Create(ctx, object)).To(Succeed())
+
+				appTemplate := &braidv1.ApplicationTemplate{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      resourceName,
+						Namespace: "default",
+					},
+					Spec: braidv1.ApplicationTemplateSpec{
+						Objects: []braidv1.ApplicationObject{
+							{Template: resourceName, Variables: map[string]string{}},
+						},
+					},
+				}
+				Expect(k8sClient.Create(ctx, appTemplate)).To(Succeed())
+
+				resource := &braidv1.Application{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      resourceName,
+						Namespace: "default",
+					},
+					Spec: braidv1.ApplicationSpec{
+						Template: resourceName,
+					},
+				}
+				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
+			}
+		})
+
+		AfterEach(func() {
+			resource := &braidv1.Application{}
+			err := k8sClient.Get(ctx, typeNamespacedName, resource)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Cleanup the specific resource instance Application")
+			Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
+
+			template := &braidv1.ApplicationTemplate{}
+			err = k8sClient.Get(ctx, typeNamespacedName, template)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Cleanup the specific resource instance ApplicationTemplate")
+			Expect(k8sClient.Delete(ctx, template)).To(Succeed())
+
+			object := &braidv1.ObjectTemplate{}
+			err = k8sClient.Get(ctx, typeNamespacedName, object)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Cleanup the specific resource instance ObjectTemplate")
+			Expect(k8sClient.Delete(ctx, object)).To(Succeed())
+		})
+		It("should successfully reconcile the resource", func() {
+			By("Reconciling the created resource")
+			controllerReconciler := &ApplicationReconciler{
+				Client: k8sClient,
+				Scheme: k8sClient.Scheme(),
+			}
+
+			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
+				NamespacedName: typeNamespacedName,
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			By("The pod is created")
+
+			template := &v1.Pod{}
+			err = k8sClient.Get(ctx, typeNamespacedName, template)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(template.Spec.Containers[0].Image).To(Equal("nginx"))
+			Expect(template.Spec.Containers[0].Env).To(Equal([]v1.EnvVar{{Name: "foo", Value: "bar"}}))
 		})
 	})
 })
