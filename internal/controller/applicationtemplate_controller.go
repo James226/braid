@@ -17,20 +17,20 @@ limitations under the License.
 package controller
 
 import (
-    "context"
+	"context"
 
-    "k8s.io/apimachinery/pkg/runtime"
-    ctrl "sigs.k8s.io/controller-runtime"
-    "sigs.k8s.io/controller-runtime/pkg/client"
-    logf "sigs.k8s.io/controller-runtime/pkg/log"
+	"k8s.io/apimachinery/pkg/runtime"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
-    v1 "github.com/james226/braid/api/v1"
+	v1 "github.com/james226/braid/api/v1"
 )
 
 // ApplicationTemplateReconciler reconciles a ApplicationTemplate object
 type ApplicationTemplateReconciler struct {
-    client.Client
-    Scheme *runtime.Scheme
+	client.Client
+	Scheme *runtime.Scheme
 }
 
 // +kubebuilder:rbac:groups=braid.james-parker.dev,resources=applications,verbs=get;list;watch;create;update;patch;delete
@@ -43,28 +43,28 @@ type ApplicationTemplateReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.21.0/pkg/reconcile
 func (r *ApplicationTemplateReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-    l := logf.FromContext(ctx)
+	l := logf.FromContext(ctx)
 
-    l.Info("Reconcile request", "namespace", req.Namespace, "name", req.Name)
+	l.Info("Reconcile request", "namespace", req.Namespace, "name", req.Name)
 
-    var application v1.ApplicationTemplate
-    err := r.Get(ctx, req.NamespacedName, &application)
+	var application v1.ApplicationTemplate
+	err := r.Get(ctx, req.NamespacedName, &application)
 
-    if err != nil {
-        l.Error(err, "unable to fetch ApplicationTemplate")
-        return ctrl.Result{}, client.IgnoreNotFound(err)
-    }
+	if err != nil {
+		l.Error(err, "unable to fetch ApplicationTemplate")
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
 
-    for _, application := range application.GetOwnerReferences() {
-        l.Info("Owner Reference", "APIVersion", application.APIVersion, "Kind", application.Kind, "Name", application.Name)
-    }
+	for _, application := range application.GetOwnerReferences() {
+		l.Info("Owner Reference", "APIVersion", application.APIVersion, "Kind", application.Kind, "Name", application.Name)
+	}
 
-    return ctrl.Result{}, nil
+	return ctrl.Result{}, nil
 }
 
 func (r *ApplicationTemplateReconciler) SetupWithManager(mgr ctrl.Manager) error {
-    return ctrl.NewControllerManagedBy(mgr).
-        For(&v1.ApplicationTemplate{}).
-        Named("applicationtemplate").
-        Complete(r)
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&v1.ApplicationTemplate{}).
+		Named("applicationtemplate").
+		Complete(r)
 }

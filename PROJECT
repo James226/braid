@@ -31,4 +31,11 @@ resources:
   kind: ApplicationTemplate
   path: github.com/james226/braid/api/v1
   version: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  domain: braid.james-parker.dev
+  kind: ObjectVersion
+  path: github.com/james226/braid/api/v1
+  version: v1
 version: "3"

@@ -1,4 +1,30 @@
 apiVersion: braid.james-parker.dev/v1
+kind: Application
+metadata:
+  labels:
+    app.kubernetes.io/name: braid
+    app.kubernetes.io/managed-by: kustomize
+  name: application-sample
+spec:
+  template: applicationtemplate-sample
+  variables:
+    foo: barbar
+---
+apiVersion: braid.james-parker.dev/v1
+kind: ApplicationTemplate
+metadata:
+  labels:
+    app.kubernetes.io/name: braid
+    app.kubernetes.io/managed-by: kustomize
+  name: applicationtemplate-sample
+spec:
+  objects:
+    - template: objecttemplate-sample
+      variables:
+        image: nginx
+        tag: 1.14.2
+---
+apiVersion: braid.james-parker.dev/v1
 kind: ObjectTemplate
 metadata:
   labels:

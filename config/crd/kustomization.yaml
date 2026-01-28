@@ -5,6 +5,7 @@ resources:
 - bases/braid.james-parker.dev_applications.yaml
 - bases/braid.james-parker.dev_applicationtemplates.yaml
 - bases/braid.james-parker.dev_objecttemplates.yaml
+- bases/braid.james-parker.dev_objectversions.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patches:

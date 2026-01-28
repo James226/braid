@@ -7,7 +7,7 @@ metadata:
   name: applicationtemplate-sample
 spec:
   objects:
-    - template: objecttemplate-sample
+    - template: objectversion-sample
       variables:
         image: nginx
         test: foo1

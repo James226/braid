@@ -3,4 +3,5 @@ resources:
 - v1_application.yaml
 - v1_objecttemplate.yaml
 - v1_applicationtemplate.yaml
+- v1_objectversion.yaml
 # +kubebuilder:scaffold:manifestskustomizesamples

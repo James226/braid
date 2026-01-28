@@ -115,21 +115,21 @@ var _ = Describe("Application Controller", func() {
 			By("creating the custom resource for the Kind Application")
 			err := k8sClient.Get(ctx, typeNamespacedName, application)
 			if err != nil && errors.IsNotFound(err) {
-				object := &braidv1.ObjectTemplate{
+				object := &braidv1.ObjectVersion{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      resourceName,
 						Namespace: "default",
 					},
-					Spec: braidv1.ObjectTemplateSpec{
+					Spec: braidv1.ObjectVersionSpec{
 						ApiVersion: "v1",
 						Kind:       "Pod",
 						Spec: `
-                            containers:
-                            - name: nginx
-                              image: "nginx"
-                              env:
-                              - name: foo
-                                value: bar`,
+containers:
+- name: nginx
+  image: "nginx"
+  env:
+  - name: foo
+	value: bar`,
 					},
 				}
 				Expect(k8sClient.Create(ctx, object)).To(Succeed())
@@ -175,11 +175,11 @@ var _ = Describe("Application Controller", func() {
 			By("Cleanup the specific resource instance ApplicationTemplate")
 			Expect(k8sClient.Delete(ctx, template)).To(Succeed())
 
-			object := &braidv1.ObjectTemplate{}
+			object := &braidv1.ObjectVersion{}
 			err = k8sClient.Get(ctx, typeNamespacedName, object)
 			Expect(err).NotTo(HaveOccurred())
 
-			By("Cleanup the specific resource instance ObjectTemplate")
+			By("Cleanup the specific resource instance ObjectVersion")
 			Expect(k8sClient.Delete(ctx, object)).To(Succeed())
 		})
 		It("should successfully reconcile the resource", func() {

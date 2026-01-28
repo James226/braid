@@ -22,6 +22,9 @@ resources:
 # default, aiding admins in cluster management. Those roles are
 # not used by the braid itself. You can comment the following lines
 # if you do not want those helpers be installed with your Project.
+- objectversion_admin_role.yaml
+- objectversion_editor_role.yaml
+- objectversion_viewer_role.yaml
 - applicationtemplate_admin_role.yaml
 - applicationtemplate_editor_role.yaml
 - applicationtemplate_viewer_role.yaml
